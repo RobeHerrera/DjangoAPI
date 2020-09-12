@@ -1,10 +1,15 @@
+from rest_framework import status
+from rest_framework import viewsets
+from rest_framework import filters
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.authentication import TokenAuthentication
 
-from rest_framework import viewsets
 
 from profiles_api import serializers
+from profiles_api import models
+from profiles_api import permissions
+
 
 
 class HelloApiView(APIView):
@@ -29,7 +34,11 @@ class HelloApiView(APIView):
         if serializer.is_valid():
             name = serializer.validated_data.get('name')
             message = f'Hello {name}!'
-            return Response({'message': message})
+            print(5*'-')
+            resultado = eval(name)
+            print(resultado)
+            print(type(resultado))
+            return Response({'message': message, 'Resultado':resultado})
         else:
             return Response(
                 serializer.errors,
@@ -57,7 +66,7 @@ class HelloViewSet(viewsets.ViewSet):
 
     def list(self, request):
         """Return a hello message."""
-        
+
         a_viewset = [
             'Uses actions (list, create, retrieve, update, partial_update)',
             'Automatically maps to URLS using Routers',
@@ -99,3 +108,13 @@ class HelloViewSet(viewsets.ViewSet):
         """Handle removing an object"""
 
         return Response({'http_method': 'DELETE'})
+
+class UserProfileViewSet(viewsets.ModelViewSet):
+    """Handle creating, creating and updating profiles"""
+    serializer_class = serializers.UserProfileSerializer
+    queryset = models.UserProfile.objects.all()
+    authentication_classes = (TokenAuthentication,) #The comma at the end is to create a tupple
+    permission_classes = (permissions.UpdateOwnProfile,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name', 'email',)
+
